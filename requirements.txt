@@ -1,0 +1,16 @@
+Flask==2.2.2
+numpy==1.23.5
+librosa==0.10.1
+scikit-learn==1.1.2
+scipy==1.11.3
+tqdm==4.66.2
+hiclass==4.11.0
+pandas==2.2.2
+matplotlib==3.8.4
+seaborn==0.13.2
+plotly==5.24.1
+umap-learn==0.5.6
+soundfile==0.12.1
+requests==2.32.3
+torch==2.1.2
+essentia-tensorflow==2.1b6.dev1110
