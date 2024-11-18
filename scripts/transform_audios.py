@@ -6,7 +6,8 @@ from tqdm import tqdm
 from src.model_loader import CLAPMusic
 import soundfile as sf
 
-model = CLAPMusic()
+model_file = './ckpt/clap/music_audioset_epoch_15_esc_90.14.pt'
+model = CLAPMusic(model_file=model_file)
 model.load_model()
 
 def get_split_mp3(split, folders):
