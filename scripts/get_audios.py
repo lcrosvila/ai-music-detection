@@ -82,7 +82,6 @@ def download_audio_files(df, directory):
         for index, row in df.iterrows():
             # if the id is nan, print the row
             if pd.isna(row['id']):
-                print('Yup')
                 print('keys:', row.keys())
                 if 'clip' in row.keys():
                     row = row['clip']
