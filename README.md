@@ -20,6 +20,12 @@ pip install -r requirements.txt
 
 ## Dataset Preparation
 
+### Download prepared dataset
+
+You can download the dataset from: (need to fill this)
+
+Otherwise, you can create your own by scraping Suno and Udio and calculating the Essentia descriptors and CLAP embeddings.
+
 ### Scraping Suno and Udio
 
 To extract refernece metadata from the HTTP request, you can run:
