@@ -3,8 +3,8 @@ from flask import Flask, render_template_string, json
 app = Flask(__name__)
 
 # Paths to the graph JSON files
-GRAPH_JSON_PATH_2D = '/home/laura/aimir/flask_server/static/graph.json'
-GRAPH_JSON_PATH_3D = '/home/laura/aimir/flask_server/static/graph3d.json'
+GRAPH_JSON_PATH_2D = '/flask_server/static/graph.json'
+GRAPH_JSON_PATH_3D = '/flask_server/static/graph3d.json'
 
 # Function to load a JSON file
 def load_graph_json(path):
