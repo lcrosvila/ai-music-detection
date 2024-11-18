@@ -1,192 +1,181 @@
-# %%
-import os
+import numpy as np
 import pickle
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
+from hiclass import LocalClassifierPerNode
 
-def load_results(file_path):
-    with open(file_path, 'rb') as f:
-        return pickle.load(f)
+def load_single_embedding(file):
+    if file.endswith('.npy'):
+        try:
+            data = np.load(file, mmap_mode='r')
+        except ValueError:
+            print(f"Error loading {file}")
+        return np.load(file, mmap_mode='r')
+    return None
 
-def prepare_data(results):
-    data = []
-    for classifier, transformations in results.items():
-        original_scores = transformations['original']['test']['fine_parent']
-        for attack_type, params in transformations.items():
-            for attack_value, metrics in params.items():
-                for class_name, class_metrics in metrics['fine_parent'].items():
-                    row = {
-                        'classifier': classifier,
-                        'class': class_name,
-                        'attack_type': attack_type,
-                        'attack_value': attack_value if attack_type != 'original' else 'test',
-                        'f1': class_metrics['f1'],
-                        'precision': class_metrics['precision'],
-                        'recall': class_metrics['recall'],
-                        'accuracy': class_metrics['accuracy']
-                    }
-                    data.append(row)
-    return pd.DataFrame(data)
-
-def generate_latex_table(results):
-    latex_table = r"\begin{table}[ht]\centering\begin{tabular}{lcccc}\hline"
-    latex_table += "\nClassifier & Precision & Recall & F1-score & Accuracy \\\\ \hline\n"
+def load_embeddings(files):
+    valid_files = [f for f in files if f.endswith('.npy')]
     
-    for classifier, transformations in results.items():
-        classifier_data = transformations['original']['test']['parent']
-        
-        precision = classifier_data['precision']
-        recall = classifier_data['recall']
-        f1_score = classifier_data['f1']
-        accuracy = classifier_data['accuracy']
-        
-        latex_table += f"{classifier} & {float(precision):.3f} & {float(recall):.3f} & {float(f1_score):.3f} & {float(accuracy):.3f} \\\\ \n"
-
-    latex_table += r"\hline\n\end{tabular}"
-    latex_table += r"\caption{Classifier performance on the test set}\label{tab:test_results}\end{table}"
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(load_single_embedding, file) for file in valid_files]
+        embeddings = [future.result() for future in as_completed(futures) if future.result() is not None]
     
-    print(latex_table)
+    if not all(embedding.shape == embeddings[0].shape for embedding in embeddings):
+        raise ValueError("Inconsistent embedding shapes detected.")
 
-def plot_scores(data, score='f1', save=False, save_dir=None, plot_by='class'):
-    sns.set_style("whitegrid")
-    plt.rcParams.update({'font.size': 12})
+    return np.array(embeddings)
 
-    classes = data['class'].unique()
-    classifiers = data['classifier'].unique()
-    attack_types = ['low_pass', 'high_pass', 'decrease_sr']
+def get_split(split, embedding, folders):
+    files = []
+    y = []
+    for folder in folders:
+        with open(f'/data/{folder}/{split}.txt', 'r') as f:
+            folder_files = f.read().splitlines()
+            files.extend([f'/data/{folder}/audio/embeddings/{embedding}/{file}.npy' for file in folder_files])
+            y.extend([folder] * len(folder_files))
+    
+    X = load_embeddings(files)
+    y = np.array(y)
+    return X, y
 
-    # Define custom colors and markers for classifiers
-    palette = sns.color_palette("Set2", n_colors=3)
-    markers = ['o', 's', '^']
+def evaluate_classifier(clf, X, y, class_hierarchy):
+    y_pred = clf.predict(X)
+    # Evaluate parent level
+    y_parent = y[:, 0]
+    y_pred_parent = y_pred[:, 0]
+    
+    parent_metrics = {
+        'accuracy': accuracy_score(y_parent, y_pred_parent),
+        'precision': precision_score(y_parent, y_pred_parent, average='weighted'),
+        'recall': recall_score(y_parent, y_pred_parent, average='weighted'),
+        'f1': f1_score(y_parent, y_pred_parent, average='weighted')
+    }
+    
+    # Evaluate child level
+    y_child = y[:, 1]
+    y_pred_child = y_pred[:, 1]
 
-    # Create the save directory if it does not exist
-    if save and save_dir:
-        os.makedirs(save_dir, exist_ok=True)
+    child_metrics = {
+        'accuracy': accuracy_score(y_child, y_pred_child),
+        'precision': precision_score(y_child, y_pred_child, average='weighted'),
+        'recall': recall_score(y_child, y_pred_child, average='weighted'),
+        'f1': f1_score(y_child, y_pred_child, average='weighted')
+    }
 
-    if plot_by == 'class':
-        # Plot by class
-        for class_name in classes:
-            class_data = data[data['class'] == class_name]
+    # evaluate parent level for class (suno, udio, lastfm)
+    fine_metrics_parent = {
+        'suno': {'accuracy': accuracy_score(y_parent[y_child == 'suno'], y_pred_parent[y_child == 'suno']),
+                 'precision': precision_score(y_parent[y_child == 'suno'], y_pred_parent[y_child == 'suno'], average='weighted'),
+                 'recall': recall_score(y_parent[y_child == 'suno'], y_pred_parent[y_child == 'suno'], average='weighted'),
+                 'f1': f1_score(y_parent[y_child == 'suno'], y_pred_parent[y_child == 'suno'], average='weighted')},
+        'udio': {'accuracy': accuracy_score(y_parent[y_child == 'udio'], y_pred_parent[y_child == 'udio']),
+                 'precision': precision_score(y_parent[y_child == 'udio'], y_pred_parent[y_child == 'udio'], average='weighted'),
+                 'recall': recall_score(y_parent[y_child == 'udio'], y_pred_parent[y_child == 'udio'], average='weighted'),
+                 'f1': f1_score(y_parent[y_child == 'udio'], y_pred_parent[y_child == 'udio'], average='weighted')},
+        'lastfm': {'accuracy': accuracy_score(y_parent[y_child == 'lastfm'], y_pred_parent[y_child == 'lastfm']),
+                   'precision': precision_score(y_parent[y_child == 'lastfm'], y_pred_parent[y_child == 'lastfm'], average='weighted'),
+                   'recall': recall_score(y_parent[y_child == 'lastfm'], y_pred_parent[y_child == 'lastfm'], average='weighted'),
+                   'f1': f1_score(y_parent[y_child == 'lastfm'], y_pred_parent[y_child == 'lastfm'], average='weighted')}
+    }
+
+    # evaluate child level for class (suno, udio, lastfm)
+    fine_metrics_child = {
+        'suno': {'accuracy': accuracy_score(y_child[y_child == 'suno'], y_pred_child[y_child == 'suno']),
+                 'precision': precision_score(y_child[y_child == 'suno'], y_pred_child[y_child == 'suno'], average='weighted'),
+                 'recall': recall_score(y_child[y_child == 'suno'], y_pred_child[y_child == 'suno'], average='weighted'),
+                 'f1': f1_score(y_child[y_child == 'suno'], y_pred_child[y_child == 'suno'], average='weighted')},
+        'udio': {'accuracy': accuracy_score(y_child[y_child == 'udio'], y_pred_child[y_child == 'udio']),
+                 'precision': precision_score(y_child[y_child == 'udio'], y_pred_child[y_child == 'udio'], average='weighted'),
+                 'recall': recall_score(y_child[y_child == 'udio'], y_pred_child[y_child == 'udio'], average='weighted'),
+                 'f1': f1_score(y_child[y_child == 'udio'], y_pred_child[y_child == 'udio'], average='weighted')},
+        'lastfm': {'accuracy': accuracy_score(y_child[y_child == 'lastfm'], y_pred_child[y_child == 'lastfm']),
+                   'precision': precision_score(y_child[y_child == 'lastfm'], y_pred_child[y_child == 'lastfm'], average='weighted'),
+                   'recall': recall_score(y_child[y_child == 'lastfm'], y_pred_child[y_child == 'lastfm'], average='weighted'),
+                   'f1': f1_score(y_child[y_child == 'lastfm'], y_pred_child[y_child == 'lastfm'], average='weighted')}
+    }
+    
+    return parent_metrics, child_metrics, fine_metrics_parent, fine_metrics_child
+
+def get_transformed(transformation, param, split, folders):
+    files = []
+    y = []
+    for folder in folders:
+        with open(f'/data/{folder}/{split}.txt', 'r') as f:
+            folder_files = f.read().splitlines()
+        files.extend([f'/data/{folder}/audio/transformed/{transformation}_{param}/{file}.npy' for file in folder_files])
+        y.extend([folder] * len(folder_files))
+    
+    X = load_embeddings(files)
+    y = np.array(y)
+    print(f'Loaded {len(X), len(y)} samples.')
+    return X, y
+
+def main():
+    split = 'test'
+    with open('models_and_scaler.pkl', 'rb') as f:
+        saved_data = pickle.load(f)
+    
+    models = saved_data['models']
+    scaler = saved_data['scaler']
+    
+    folders = ['suno', 'udio', 'lastfm']
+    class_hierarchy = {
+        'AI': ['suno', 'udio'],
+        'nonAI': ['lastfm']
+    }
+    cutoffs = [100, 500, 1000, 3000, 5000, 8000, 10000, 12000, 16000, 20000]
+    transformations = {
+        'original': [split],
+        'low_pass': cutoffs,
+        'high_pass': cutoffs,
+        'decrease_sr': [8000, 16000, 22050, 24000, 44100]
+    }
+    
+    results = {model_name: {trans: {param: {'parent': {}, 'child': {}} for param in params} 
+                            for trans, params in transformations.items()} 
+               for model_name in models.keys()}
+    
+    for trans, params in transformations.items():
+        for param in params:
+            print(f"\nEvaluating on {trans} {param}:")
+            if trans == 'original':
+                X, y = get_split(split, 'clap-laion-music', folders)
+            else:
+                X, y = get_transformed(trans, param, split, folders)
             
-            # Plot low_pass and high_pass together
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), sharey=True)
+            X_scaled = scaler.transform(X)
+            y =  np.array([['AI', folder] for folder in y if folder in class_hierarchy['AI']] + 
+                          [['nonAI', folder] for folder in y if folder in class_hierarchy['nonAI']])
 
-            # Determine common y-axis limits for low_pass and high_pass
-            low_pass_data = class_data[class_data['attack_type'] == 'low_pass'][score]
-            high_pass_data = class_data[class_data['attack_type'] == 'high_pass'][score]
-            y_min = min(low_pass_data.min(), high_pass_data.min())
-            y_max = max(low_pass_data.max(), high_pass_data.max())
-            y_min_adjusted = y_min - 0.05
-            y_max_adjusted = y_max + 0.05
+            for model_name, model in models.items():
+                print(f"\n{model_name.upper()} Classifier:")
+                parent_metrics, child_metrics, fine_metrics_parent, fine_metrics_child = evaluate_classifier(model, X_scaled, y, class_hierarchy)
+                results[model_name][trans][param]['parent'] = parent_metrics
+                results[model_name][trans][param]['child'] = child_metrics
+                results[model_name][trans][param]['fine_parent'] = fine_metrics_parent
+                results[model_name][trans][param]['fine_child'] = fine_metrics_child
+                
+                print("Parent level metrics:")
+                for metric, value in parent_metrics.items():
+                    print(f"{metric}: {value:.4f}")
+                
+                print("\nChild level metrics:")
+                for metric, value in child_metrics.items():
+                    print(f"{metric}: {value:.4f}")
+                
+                print("\nFine level metrics:")
+                for class_, metrics in fine_metrics_parent.items():
+                    print(f"Class: {class_}")
+                    for metric, value in metrics.items():
+                        print(f"{metric}: {value:.4f}")
 
-            for i, attack in enumerate(['low_pass', 'high_pass']):
-                ax = ax1 if i == 0 else ax2
-                attack_data = class_data[class_data['attack_type'] == attack]
-
-                for j, classifier in enumerate(attack_data['classifier'].unique()):
-                    classifier_data = attack_data[attack_data['classifier'] == classifier]
-                    classifier_data = classifier_data.sort_values('attack_value')
-                    x = pd.to_numeric(classifier_data['attack_value'])
-                    if classifier == 'svc':
-                        classifier = 'svm'
-                    ax.plot(x, classifier_data[score], marker=markers[j], markersize=6, label=classifier, color=palette[j])
-
-                ax.set_title(f'{attack.replace("_", " ").title()} Filter', fontsize=14)
-                ax.set_xlabel('Cutoff Frequency (Hz)', fontsize=12)
-                if i == 0:
-                    ax.set_ylabel(f'{score.upper()} Score', fontsize=12)
-                ax.legend(title='Classifier', title_fontsize='12', fontsize='10')
-                ax.grid(True, linestyle='--', alpha=0.7)
-                ax.set_ylim(y_min_adjusted, y_max_adjusted)
-
-            if class_name == 'lastfm':
-                class_name = 'msd'
-            plt.suptitle(f'{class_name}: {score.upper()} Score vs Low Pass and High Pass Filters', fontsize=16)
-            plt.tight_layout()
-            if save:
-                fig_path = os.path.join(save_dir, f'{class_name}_low_high_pass_{score}.pdf')
-                plt.savefig(fig_path, format='pdf', dpi=300, bbox_inches='tight')
-            else:
-                plt.show()
-            plt.close()
-
-    elif plot_by == 'classifier':
-        # Plot by classifier
-        for classifier in classifiers:
-            classifier_data = data[data['classifier'] == classifier]
-            if classifier == 'svc':
-                classifier = 'svm'
-
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), sharey=True)
-
-            # Determine common y-axis limits for low_pass and high_pass
-            low_pass_data = classifier_data[classifier_data['attack_type'] == 'low_pass'][score]
-            high_pass_data = classifier_data[classifier_data['attack_type'] == 'high_pass'][score]
-            y_min = min(low_pass_data.min(), high_pass_data.min())
-            y_max = max(low_pass_data.max(), high_pass_data.max())
-            y_min_adjusted = y_min - 0.05
-            y_max_adjusted = y_max + 0.05
-
-            for i, attack in enumerate(['low_pass', 'high_pass']):
-                ax = ax1 if i == 0 else ax2
-                attack_data = classifier_data[classifier_data['attack_type'] == attack]
-
-                for j, class_name in enumerate(attack_data['class'].unique()):
-                    class_data = attack_data[attack_data['class'] == class_name]
-                    class_data = class_data.sort_values('attack_value')
-                    x = pd.to_numeric(class_data['attack_value'])
-                    ax.plot(x, class_data[score], marker=markers[j], markersize=6, label=class_name, color=palette[j])
-
-                ax.set_title(f'{attack.replace("_", " ").title()} Filter', fontsize=14)
-                ax.set_xlabel('Cutoff Frequency (Hz)', fontsize=12)
-                if i == 0:
-                    ax.set_ylabel(f'{score.upper()} Score', fontsize=12)
-                ax.legend(title='Class', title_fontsize='12', fontsize='10')
-                ax.grid(True, linestyle='--', alpha=0.7)
-                ax.set_ylim(y_min_adjusted, y_max_adjusted)
-
-            plt.suptitle(f'{classifier.upper()}: {score.upper()} Score vs Low Pass and High Pass Filters', fontsize=16)
-            plt.tight_layout()
-            if save:
-                fig_path = os.path.join(save_dir, f'{classifier}_low_high_pass_{score}.pdf')
-                plt.savefig(fig_path, format='pdf', dpi=300, bbox_inches='tight')
-            else:
-                plt.show()
-            plt.close()
-
-    # Plot other attack types (e.g., decrease_sr) separately
-    for attack_type in ['decrease_sr']:
-        for item in (classes if plot_by == 'class' else classifiers):
-            item_data = data[data['class'] == item] if plot_by == 'class' else data[data['classifier'] == item]
-            item_label = item if plot_by == 'class' else ('svm' if item == 'svc' else item)
-
-            plt.figure(figsize=(10, 6))
-            attack_data = item_data[item_data['attack_type'] == attack_type]
-
-            for j, sub_item in enumerate(attack_data['classifier'].unique() if plot_by == 'class' else attack_data['class'].unique()):
-                sub_data = attack_data[attack_data['classifier'] == sub_item] if plot_by == 'class' else attack_data[attack_data['class'] == sub_item]
-                sub_data = sub_data.sort_values('attack_value')
-                x = pd.to_numeric(sub_data['attack_value'], errors='coerce')
-                plt.plot(x, sub_data[score], marker=markers[j], markersize=6, label=sub_item, color=palette[j])
-
-            if item_label == 'lastfm':
-                item_label = 'msd'
-            plt.title(f'{item_label}: {score.upper()} Score vs {attack_type.replace("_", " ").title()}', fontsize=16)
-            plt.xlabel('Sample Rate (Hz)' if attack_type == 'decrease_sr' else f'{attack_type.replace("_", " ").title()} Value', fontsize=12)
-            plt.ylabel(f'{score.upper()} Score', fontsize=12)
-            plt.legend(title='Classifier' if plot_by == 'class' else 'Class', title_fontsize='12', fontsize='10')
-            plt.grid(True, linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            if save:
-                fig_path = os.path.join(save_dir, f'{item_label}_{attack_type}_{score}.pdf')
-                plt.savefig(fig_path, format='pdf', dpi=300, bbox_inches='tight')
-            else:
-                plt.show()
-            plt.close()
+                
+    
+    with open('evaluation_results_hierarchical_test.pkl', 'wb') as f:
+        pickle.dump(results, f)
+    
+    print("\nEvaluation results have been saved to 'evaluation_results_hierarchical_test.pkl'")
 
 if __name__ == "__main__":
-    results = load_results('evaluation_results_hierarchical_test.pkl')
-    data = prepare_data(results)
-    generate_latex_table(results)
-    plot_scores(data, 'f1', save=False, save_dir='figures/robustness_test', plot_by='class')
+    main()
