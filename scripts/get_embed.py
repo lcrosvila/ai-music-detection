@@ -5,7 +5,7 @@ from pathlib import Path
 from tqdm import tqdm
 import os
 import json
-from src.model_loader import CLAPMusic, MusiCNN
+from utils.model_loader import CLAPMusic, MusiCNN
 
 def get_all_models(model_file):
     ms = [
