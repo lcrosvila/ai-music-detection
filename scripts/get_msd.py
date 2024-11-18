@@ -80,14 +80,14 @@ def download_full_song(row, out_dir='/data/lastfm/audio'):
 import random
 random.seed(0)
 random.shuffle(rows)
-rows = rows[12000:120000]
+rows = rows[:100000]
 
 for row in rows:
     # download full song
     youtube_url = download_full_song(row)
     if youtube_url is None:
         continue
-    print(youtube_url)
+
     # add youtube url to metadata
     row = list(row)
     row.append(youtube_url)
