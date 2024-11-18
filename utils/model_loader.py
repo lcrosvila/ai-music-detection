@@ -45,10 +45,10 @@ class ModelLoader(ABC):
         return wav_data
 
 class CLAPMusic(ModelLoader):
-    def __init__(self):
+    def __init__(self, model_file: str):
         super().__init__(f"clap-laion-music", 512, 48000)
-        self.model_file = '/home/laura/aimir/embeddings_env/lib/python3.11/site-packages/fadtk/.model-checkpoints/music_audioset_epoch_15_esc_90.14.pt'
-
+        self.model_file = model_file
+        
     def load_model(self):
         import laion_clap
 
