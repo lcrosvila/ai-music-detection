@@ -81,11 +81,11 @@ def classify_datasets():
         models[name] = clf
 
     # Save results
-    with open('classification_results.pkl', 'wb') as f:
+    with open('artifacts/classification_results.pkl', 'wb') as f:
         pickle.dump(results, f)
     
     # Save models and scaler
-    with open('models_and_scaler.pkl', 'wb') as f:
+    with open('artifacts/models_and_scaler.pkl', 'wb') as f:
         pickle.dump({'models': models, 'scaler': scaler}, f)
 
 if __name__ == '__main__':
