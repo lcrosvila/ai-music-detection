@@ -80,7 +80,7 @@ python get_embed.py -m clap-laion-music -d /data/suno/audio /data/udio/audio -f 
 
 ### Analyze dataset features
 
-You can perform feature analysis:
+You can perform feature analysis of the Essentia descriptors:
 
 ```bash
 python notebooks/feature_importance.ipynb
@@ -93,7 +93,10 @@ python notebooks/umap_visualization.ipynb
 ```
 
 ### Train the Hierarchical classifiers
-Train the hiererchical classifiers and save them:
+
+The pre-trained models can be found in: [TODO]
+
+Alternatively, train the hiererchical classifiers and save them:
 
 ```bash
 python src/hierarchical_classifier.py
@@ -101,7 +104,7 @@ python src/hierarchical_classifier.py
 
 The models and scalers are saved in `artifacts/models_and_scaler.pkl` and the training classification results in `artifacts/classification_results.pkl`.
 
-They can be compared with Ircamplify results:
+They can then be compared with Ircamplify results:
 
 ```bash
 python src/compare_ircamplify.py
