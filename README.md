@@ -130,43 +130,6 @@ To see the results:
 python notebooks/results_audio_transformation.ipynb
 ```
 
-## File Descriptions
-
-- **data/**: Dataset splits and download scripts.
-    - `boomy/`, `lastfm/`, `suno/`, `udio/`: Contain train, validation, test, and sample text files for each dataset.
-    - `download_suno.sh`, `download_udio.sh`: Scripts to download Suno and Udio datasets.
-
-- **figures/**: Visualizations of feature distributions.
-    - `feature_distributions.pdf`: PDF showing feature distribution plots.
-
-- **flask_server/**: Code for deploying the UMAP visualization via a Flask app.
-    - `app.py`: Main Flask application script.
-    - `static/graph.json`, `static/graph3d.json`: Precomputed graph data for visualizations.
-
-- **notebooks/**: Jupyter notebooks for analysis and visualization.
-    - `add_confound.ipynb`: Adds confounding factor to the dataset to sanity check the hypothesis of the audio transformations.
-    - `feature_importance.ipynb`: Analyzes feature importance of Essentia features.
-    - `results_audio_transformation.ipynb`: Investigates effects of audio transformations.
-    - `umap_visualization.ipynb`: UMAP visualization of embeddings.
-
-- **scripts/**: Helper scripts for feature extraction, metadata retrieval, and dataset management.
-    - `essentia_features.py`: Extracts audio features using the Essentia library.
-    - `fetch_metadata_song.py`: Fetches metadata for individual songs.
-    - `get_audios.py`: Downloads audio files.
-    - `get_embed.py`: Generates audio embeddings.
-    - `get_msd.py`: Retrieves Million Song Dataset (MSD) information.
-    - `split_train_val_test.py`: Splits data into train, validation, and test sets.
-    - `transform_audios.py`: Applies transformations to audio files.
-
-- **src/**: Core analysis and model code.
-    - `analyze_audio_transformations.py`: Evaluates impact of audio transformations.
-    - `compare_ircamplify.py`: Compares results against Ircamplify.
-    - `hierarchical_classifier.py`: Implements a hierarchical classifier.
-
-- **utils/**: Utility functions for data and model handling.
-    - `data_utils.py`: Data preprocessing utilities.
-    - `model_loader.py`: Loads pre-trained models.
-
 ## Contributing
 
 Contributions are welcome. Please open an issue or submit a pull request.
