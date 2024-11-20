@@ -24,29 +24,7 @@ pip install -r requirements.txt
 
 You can download the dataset from: [TODO]
 
-Otherwise, you can create your own by scraping Suno and Udio and calculating the Essentia descriptors and CLAP embeddings.
-
-### Scraping Suno and Udio
-
-To extract refernece metadata from the HTTP request, you can run:
-
-```bash
-cd data/suno/
-./download_suno.sh
-cd ../../
-cd data/udio/
-./download_udio.sh
-cd ../../
-```
-
-This will save the metadata of new songs in `data/suno/refs/` and `data/udio/refs/` respectively.
-
-You can then download the audios:
-
-```bash
-python scripts/get_audios.py data/suno/
-python scripts/get_audios.py data/udio/
-```
+You can collect your own and calculate the Essentia descriptors and CLAP embeddings.
 
 ### Getting the MSD dataset
 
