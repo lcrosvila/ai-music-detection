@@ -106,13 +106,17 @@ def get_results_all(folders = ['suno', 'udio', 'lastfm']):
 
     #  how many rows have 'suno', 'udio', 'lastfm' as the true class
     # print(classifiers_results['true_class'].value_counts())
-    # ircamplify results
-    ircamplify_results = load_ircamplify_results(folders)
-    # remove rows that have repeated files in ircamplify results
-    ircamplify_results = ircamplify_results.drop_duplicates(subset='file', keep='first')
-    merged_data = pd.merge(classifiers_results, ircamplify_results, on=['true_class', 'file'], how='left')
-    print('length of merged data:', len(merged_data))
-    return merged_data
+    # if there are ircamplify results, compare
+    if os.path.exists('/data/ircamplify_results/'):
+        # ircamplify results
+        ircamplify_results = load_ircamplify_results(folders)
+        # remove rows that have repeated files in ircamplify results
+        ircamplify_results = ircamplify_results.drop_duplicates(subset='file', keep='first')
+        merged_data = pd.merge(classifiers_results, ircamplify_results, on=['true_class', 'file'], how='left')
+        print('length of merged data:', len(merged_data))
+        return merged_data
+    else:
+        return classifiers_results
 
 # Function to print classification report in LaTeX format
 def print_classification_report_latex(data):
