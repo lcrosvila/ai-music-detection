@@ -72,7 +72,7 @@ python notebooks/umap_visualization.ipynb
 
 ### Train the Hierarchical classifiers
 
-The pre-trained models can be found in: [TODO]
+The pre-trained models can be found in: [models_and_scaler.pkl](https://kth-my.sharepoint.com/:u:/g/personal/lcros_ug_kth_se/ETAnWpSVIVNItJPSWD8g3bsBs4oDOnHiwa7eRZRXVqT0zw?e=gvSJv4)
 
 Alternatively, train the hiererchical classifiers and save them:
 
@@ -88,7 +88,7 @@ They can then be evaluated:
 python src/evaluate_classifier.py
 ```
 
-Note: If the folder `/data/ircamplify_results/` exists, the predictions of the classifier will be compared against those from Ircamplify (see `scripts
+Note: If the folder `/data/ircamplify_results/` exists, the predictions of the classifiers will be compared against those from Ircamplify (see `scripts
 /ircamplify.py` to query the Ircamplify AI Detector API).
 
 ### Performance against transformed audios
