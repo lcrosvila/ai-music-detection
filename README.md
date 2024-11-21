@@ -82,11 +82,14 @@ python src/hierarchical_classifier.py
 
 The models and scalers are saved in `artifacts/models_and_scaler.pkl` and the training classification results in `artifacts/classification_results.pkl`.
 
-They can then be compared with Ircamplify results:
+They can then be evaluated:
 
 ```bash
-python src/compare_ircamplify.py
+python src/evaluate_classifier.py
 ```
+
+Note: If the folder `/data/ircamplify_results/` exists, the predictions of the classifier will be compared against those from Ircamplify (see `scripts
+/ircamplify.py` to query the Ircamplify AI Detector API).
 
 ### Performance against transformed audios
 
