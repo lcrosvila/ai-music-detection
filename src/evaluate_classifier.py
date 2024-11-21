@@ -124,7 +124,8 @@ def print_classification_report_latex(data):
     y_pred_svm_parent = data['svm_pred_parent']
     y_pred_rf_parent = data['rf_pred_parent']
     y_pred_knn_parent = data['knn_pred_parent']
-    y_pred_ai = data['is_ai']
+    if 'is_ai' in data:
+        y_pred_ai = data['is_ai']
 
     # Convert true_class to AI vs non-AI binary classification
     y_true_ai = np.array([False if label == 'lastfm' else True for label in y_true])
@@ -132,14 +133,21 @@ def print_classification_report_latex(data):
     y_pred_svm_ai = np.array([True if label == 'AI' else False for label in y_pred_svm_parent])
     y_pred_rf_ai = np.array([True if label == 'AI' else False for label in y_pred_rf_parent])
     y_pred_knn_ai = np.array([True if label == 'AI' else False for label in y_pred_knn_parent])
-    
+
     # Confusion matrices
-    classifiers = [
-        ("SVM Classifier", y_pred_svm_ai),
-        ("RF Classifier", y_pred_rf_ai),
-        ("KNN Classifier", y_pred_knn_ai),
-        ("Ircam Amplify Classifier", y_pred_ai)
-    ]
+    if 'is_ai' in data:
+        classifiers = [
+            ("SVM Classifier", y_pred_svm_ai),
+            ("RF Classifier", y_pred_rf_ai),
+            ("KNN Classifier", y_pred_knn_ai),
+            ("Ircam Amplify Classifier", y_pred_ai)
+        ]
+    else:
+        classifiers = [
+            ("SVM Classifier", y_pred_svm_ai),
+            ("RF Classifier", y_pred_rf_ai),
+            ("KNN Classifier", y_pred_knn_ai),
+        ]
     for (title, y_pred) in classifiers:
         cm = pd.crosstab(y_true, y_pred, rownames=['True'], colnames=['Predicted'], margins=True)
         cm = cm.iloc[:-1, :-1]
@@ -152,14 +160,18 @@ def print_classification_report_latex(data):
     svm_report = classification_report(y_true_ai, y_pred_svm_ai, output_dict=True)
     rf_report = classification_report(y_true_ai, y_pred_rf_ai, output_dict=True)
     knn_report = classification_report(y_true_ai, y_pred_knn_ai, output_dict=True)
-    ai_report = classification_report(y_true_ai, y_pred_ai, output_dict=True)
+    if 'is_ai' in data:
+        ai_report = classification_report(y_true_ai, y_pred_ai, output_dict=True)
 
     # Combine reports into a LaTeX table
     table = r"\begin{table}[ht]\centering\begin{tabular}{lcccc}\hline"
     table += "\n"
     table += r"Classifier & Precision & Recall & F1-Score & Accuracy \\ \hline"
     table += "\n"
-    classifiers = [("SVM", svm_report), ("RF", rf_report), ("KNN", knn_report), ("Ircam Amp.", ai_report)]
+    if 'is_ai' in data:
+        classifiers = [("SVM", svm_report), ("RF", rf_report), ("KNN", knn_report), ("Ircam Amp.", ai_report)]
+    else:
+        classifiers = [("SVM", svm_report), ("RF", rf_report), ("KNN", knn_report)]
 
     for classifier, report in classifiers:
         precision = report['True']['precision']
