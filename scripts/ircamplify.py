@@ -5,9 +5,6 @@ import json
 from pathlib import Path
 import os
 
-# ---------------------------------------------
-# Add your API credentials HERE
-# ---------------------------------------------
 #load credentials
 with open('credentials/credentials.json') as f:
     credentials = json.load(f)
@@ -129,9 +126,7 @@ def process_audio_batch(headers, ias_url_list):
         return None
 
 def main():
-    for dataset in ['udio', 'lastfm', 'suno']:
-    # for dataset in ['boomy']:
-    # for dataset in ['lastfm']:
+    for dataset in ['udio', 'lastfm', 'suno', 'boomy']:
         # Get auth token
         id_token = get_auth_token(client_id, client_secret)
         headers = {

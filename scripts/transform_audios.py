@@ -249,9 +249,6 @@ def main():
     cutoffs = [100, 500, 1000, 3000, 5000, 8000, 10000, 12000, 16000, 20000]
     sr_decrease = [8000, 16000, 22050, 24000, 44100]
 
-    # cutoffs = [1000, 8000, 10000, 16000]
-    # sr_decrease = [22050, 24000]
-
     files = get_split_mp3(split, folders)
 
     for folder in folders:

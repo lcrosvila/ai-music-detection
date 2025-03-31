@@ -16,19 +16,13 @@ def get_unique_songs(metadata_path):
         try:
             with open(file_path) as f:
                 content = f.read()
-                # Check for the "Too many requests." message
-                if "Too many requests." in content:
-                    print(f"File {file_path} contains 'Too many requests.' message. Deleting file.")
-                    os.remove(file_path)
-                    continue
-
                 # Attempt to parse the content as JSON
                 metadata[file] = json.loads(content)
         except json.JSONDecodeError as e:
             print(f"Skipping file due to JSON error: {file_path} - {str(e)}")
             continue
 
-        # Process the loaded JSON data (remaining part of your code)
+        # Process the loaded JSON data
         if 'playlist_clips' in metadata[file]:
             for item in metadata[file]['playlist_clips']:
                 item = item['clip']
