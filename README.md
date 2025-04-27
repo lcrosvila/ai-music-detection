@@ -96,6 +96,8 @@ python src/evaluate_classifier.py
 Note: If the folder `/data/ircamplify_results/` exists, the predictions of the classifiers will be compared against those from Ircamplify (see `scripts
 /ircamplify.py` to query the Ircamplify AI Detector API).
 
+Update: We have added the script to compare against [SONICS]([https://kth-my.sharepoint.com/:u:/g/personal/lcros_ug_kth_se/ETAnWpSVIVNItJPSWD8g3bsBs4oDOnHiwa7eRZRXVqT0zw?e=gvSJv4](https://github.com/awsaf49/sonics) (see `scripts/sonics_test.py`).
+
 ### Performance against transformed audios
 
 Transform the audios:
