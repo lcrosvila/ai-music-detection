@@ -14,3 +14,4 @@ soundfile==0.12.1
 requests==2.32.3
 torch==2.1.2
 essentia-tensorflow==2.1b6.dev1110
+git+https://github.com/awsaf49/sonics.git
