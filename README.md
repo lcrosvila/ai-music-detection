@@ -24,6 +24,8 @@ You can find the song IDs for each split in the `data/` directory. To access the
 
 - **Suno**: [`https://suno.com/song/{id}`](https://suno.com/song/{id})  
 - **Udio**: [`https://www.udio.com/songs/{id}`](https://www.udio.com/songs/{id})
+
+⚠️ Some of the URLs might not work, as some of the songs have been taken down from the platforms.
   
 ### Download prepared dataset
 
