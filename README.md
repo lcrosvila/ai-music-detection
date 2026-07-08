@@ -79,7 +79,7 @@ python notebooks/umap_visualization.ipynb
 
 ### Train the Hierarchical classifiers
 
-The pre-trained models can be found in: [models_and_scaler.pkl](https://kth-my.sharepoint.com/:u:/g/personal/lcros_ug_kth_se/ETAnWpSVIVNItJPSWD8g3bsBs4oDOnHiwa7eRZRXVqT0zw?e=gvSJv4)
+The pre-trained models can be found in: [models_and_scaler.pkl](https://kth-my.sharepoint.com/:u:/g/personal/lcros_ug_kth_se/IQAwJ1qUlSFTSLST0lg_IN27AbOKAzpx4sGu3kWUV1ak9M8?e=IhjUnR)
 
 Alternatively, train the hiererchical classifiers and save them:
 
