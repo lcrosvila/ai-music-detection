@@ -79,7 +79,7 @@ python notebooks/umap_visualization.ipynb
 
 ### Train the Hierarchical classifiers
 
-The pre-trained models can be found in HuggingFace: [models_and_scaler.pkl](https://huggingface.co/lcros/ai-music-detection)
+The pre-trained models can be found in HuggingFace: [models_and_scaler](https://huggingface.co/lcros/ai-music-detection)
 
 Alternatively, train the hiererchical classifiers and save them:
 
